@@ -1,14 +1,18 @@
 package com.cyberspeed.assignment.helper;
 
+import com.cyberspeed.assignment.ScratchGame;
 import com.cyberspeed.assignment.models.GameConfig;
 import com.cyberspeed.assignment.models.StandardSymbolProbability;
 import com.cyberspeed.assignment.models.SymbolConfig;
 import com.cyberspeed.assignment.models.WinCombination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class GameHelper {
 
+    private static final Logger logger = LoggerFactory.getLogger(GameHelper.class);
     private final GameConfig config;
     private final Random random = new Random();
     private final String[][] matrix;
@@ -31,8 +35,8 @@ public class GameHelper {
      */
     public Map<String, Object> playGame(int betAmount) {
         generateMatrix();
-
-        int reward = calculateReward(betAmount);
+        int reward = calculateBaseReward(betAmount); // Calculate the base reward
+        reward = applyBonusEffects(reward);
 
         return Map.of(
                 "matrix", matrix,
@@ -66,7 +70,8 @@ public class GameHelper {
     private String getRandomSymbol(int row, int col) {
         // If there's no probability config, return a default symbol
         if (config.getProbabilities() == null || config.getProbabilities().getStandardSymbols() == null || config.getProbabilities().getStandardSymbols().isEmpty()) {
-            return "A"; // add some default value
+            logger.info("No standard symbol probabilities defined. Using default symbol 'A'.");
+            return "A";
         }
 
         StandardSymbolProbability probabilityConfig = config.getProbabilities().getStandardSymbols().get(0);
@@ -91,6 +96,7 @@ public class GameHelper {
             }
         }
 
+        logger.info("Could not determine symbol based on probabilities. Using default symbol 'A'.");
         return "A";
     }
 
@@ -118,13 +124,15 @@ public class GameHelper {
 
 
     /**
-     * Calculates the total reward based on winning combinations and bonus symbols.
+     * Calculates the base reward based on winning combinations.
+     * Bonus symbols are not handled here.
      *
      * @param betAmount The amount the user bet.
-     * @return The total reward.
+     * @return The base reward.
      */
-    private int calculateReward(int betAmount) {
+    private int calculateBaseReward(int betAmount) {
         int totalReward = 0;
+        // Check for winning combinations
         checkWinningCombinations();
 
         // Calculate reward for each symbol and its winning combinations
@@ -146,7 +154,38 @@ public class GameHelper {
             }
         }
 
+        return totalReward;
+    }
 
+    /**
+     * Applies the effects of any bonus symbols present in the matrix.
+     *
+     * @param totalReward The current total reward.
+     * @return The total reward after applying bonus effects.
+     */
+    private int applyBonusEffects(int totalReward) {
+        for (int row = 0; row < config.getRows(); row++) {
+            for (int col = 0; col < config.getColumns(); col++) {
+                String symbol = matrix[row][col];
+                if (config.getSymbols().containsKey(symbol) && "bonus".equals(config.getSymbols().get(symbol).getType()) && totalReward > 0) {
+                    appliedBonusSymbol = symbol;
+                    SymbolConfig bonusConfig = config.getSymbols().get(symbol);
+                    if (bonusConfig != null) {
+                        if ("multiply_reward".equals(bonusConfig.getImpact())) {
+                            totalReward = (int) Math.round(totalReward * bonusConfig.getRewardMultiplier());
+                        } else if ("extra_bonus".equals(bonusConfig.getImpact())) {
+                            if (bonusConfig.getExtra() != null) {
+                                totalReward += bonusConfig.getExtra();
+                            }
+                        }
+                    }
+                    return totalReward;
+                }
+            }
+        }
+        // Default bonus symbol if none is found
+        appliedBonusSymbol = "MISS";
+        logger.info("No bonus symbol found.");
         return totalReward;
     }
 
@@ -253,8 +292,4 @@ public class GameHelper {
         }
         return null;
     }
-
-
-
-
 }
