@@ -1,12 +1,14 @@
 package com.cyberspeed.assignment.helper;
 
 import com.cyberspeed.assignment.models.GameConfig;
+import com.cyberspeed.assignment.models.StandardSymbolProbability;
 
 import java.util.*;
 
 public class GameHelper {
 
     private final GameConfig config;
+    private final Random random = new Random();
     private final String[][] matrix;
     private final Map<String, List<String>> appliedWinningCombinations;
     private String appliedBonusSymbol;
@@ -26,7 +28,7 @@ public class GameHelper {
      * @return A map containing the game's results (matrix, reward, etc.).
      */
     public Map<String, Object> playGame(int betAmount) {
-        // TODO: generate matrix
+        generateMatrix();
 
         //TODO: calculate reward
         int reward = 0;
@@ -39,5 +41,53 @@ public class GameHelper {
         );
     }
 
+    /**
+     * Generates the symbol matrix based on the configuration.
+     */
+    private void generateMatrix() {
+        for (int row = 0; row < config.getRows(); row++) {
+            for (int col = 0; col < config.getColumns(); col++) {
+                matrix[row][col] = getRandomSymbol(row, col); // Get symbol for each cell
+            }
+        }
+    }
 
+
+    /**
+     * Gets a random symbol for a specific cell, considering probabilities.
+     *
+     * @param row The row index.
+     * @param col The column index.
+     * @return The randomly selected symbol.
+     */
+    private String getRandomSymbol(int row, int col) {
+        // If there's no probability config, return a default symbol
+        if (config.getProbabilities() == null || config.getProbabilities().getStandardSymbols() == null || config.getProbabilities().getStandardSymbols().isEmpty()) {
+            return "A"; // add some default value
+        }
+
+        StandardSymbolProbability probabilityConfig = config.getProbabilities().getStandardSymbols().get(0);
+
+        // Find the probability configuration for the current cell
+        for (StandardSymbolProbability prob : config.getProbabilities().getStandardSymbols()) {
+            if (prob.getRow() == row && prob.getColumn() == col) {
+                probabilityConfig = prob;
+                break;
+            }
+        }
+
+        Map<String, Integer> symbols = probabilityConfig.getSymbols();
+        int totalWeight = symbols.values().stream().mapToInt(Integer::intValue).sum();
+        int randomNum = random.nextInt(totalWeight) + 1;
+
+        // Determine the symbol based on the random number and weights
+        for (Map.Entry<String, Integer> entry : symbols.entrySet()) {
+            randomNum -= entry.getValue();
+            if (randomNum <= 0) {
+                return entry.getKey(); // Return the symbol
+            }
+        }
+
+        return "A";
+    }
 }
