@@ -140,7 +140,7 @@ public class GameHelper {
                 for (String combination : combinations) {
                     if (config.getWinCombinations().containsKey(combination)) {
                         WinCombination winCombination = config.getWinCombinations().get(combination);
-                        totalReward += (int)Math.round(symbolReward * winCombination.getRewardMultiplier());
+                        totalReward += (int) Math.round(symbolReward * winCombination.getRewardMultiplier());
                     }
                 }
             }
@@ -155,10 +155,106 @@ public class GameHelper {
      * Checks for winning combinations in the matrix.
      */
     private void checkWinningCombinations() {
-       //TODO: Add logic
         checkSameSymbolsCombinations(); // Check for "same_symbols" combinations
         checkLinearSymbolsCombinations(); // Check for "linear_symbols" combinations
     }
+
+
+    /**
+     * Checks for "same_symbols" winning combinations.
+     */
+    private void checkSameSymbolsCombinations() {
+        Map<String, Integer> symbolCounts = new HashMap<>();
+
+        // Count occurrences of each standard symbol
+        for (String[] row : matrix) {
+            for (String symbol : row) {
+                if (config.getSymbols().containsKey(symbol) && "standard".equals(config.getSymbols().get(symbol).getType())) {
+                    symbolCounts.put(symbol, symbolCounts.getOrDefault(symbol, 0) + 1);
+                }
+            }
+        }
+
+        // Check if any symbol count matches a winning combination
+        for (Map.Entry<String, Integer> entry : symbolCounts.entrySet()) {
+            String symbol = entry.getKey();
+            int count = entry.getValue();
+
+            for (Map.Entry<String, WinCombination> winEntry : config.getWinCombinations().entrySet()) {
+                WinCombination winCombination = winEntry.getValue();
+                if ("same_symbols".equals(winCombination.getWhen()) && count >= winCombination.getCount()) {
+                    appliedWinningCombinations.computeIfAbsent(symbol, k -> new ArrayList<>()).add(winEntry.getKey());
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks for "linear_symbols" winning combinations.
+     */
+    private void checkLinearSymbolsCombinations() {
+        for (Map.Entry<String, WinCombination> winEntry : config.getWinCombinations().entrySet()) {
+            WinCombination winCombination = winEntry.getValue();
+            if ("linear_symbols".equals(winCombination.getWhen())) {
+                checkLinearCombination(winCombination);
+            }
+        }
+    }
+
+    /**
+     * Checks for a specific "linear_symbols" winning combination.
+     *
+     * @param winCombination The winning combination to check.
+     */
+    private void checkLinearCombination(WinCombination winCombination) {
+        for (List<String> coveredAreaGroup : winCombination.getCoveredAreas()) {
+            String firstSymbol = null;
+            boolean match = true;
+
+            // Check if all symbols in the covered area match
+            for (String cell : coveredAreaGroup) {
+                String[] parts = cell.split(":");
+                int row = Integer.parseInt(parts[0]);
+                int col = Integer.parseInt(parts[1]);
+                String symbol = matrix[row][col];
+
+                if (firstSymbol == null) {
+                    firstSymbol = symbol;
+                } else if (!firstSymbol.equals(symbol)) {
+                    match = false;
+                    break;
+                }
+                if (config.getSymbols().containsKey(symbol) && "bonus".equals(config.getSymbols().get(symbol).getType())) {
+                    match = false;
+                    break;
+                }
+            }
+
+            // If all symbols match, add the winning combination
+            if (match && firstSymbol != null && config.getSymbols().containsKey(firstSymbol) && "standard".equals(config.getSymbols().get(firstSymbol).getType())) {
+                appliedWinningCombinations.computeIfAbsent(firstSymbol, k -> new ArrayList<>()).add(getKeyByValue(config.getWinCombinations(), winCombination));
+            }
+        }
+    }
+
+
+    /**
+     * Gets the key (name) of a WinCombination from the map, given its value (WinCombination object).
+     *
+     * @param map   The map of WinCombinations.
+     * @param value The WinCombination object.
+     * @return The key (name) of the WinCombination.
+     */
+    private <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Map.Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+
 
 
 }
