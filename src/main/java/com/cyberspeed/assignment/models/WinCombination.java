@@ -1,12 +1,18 @@
 package com.cyberspeed.assignment.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class WinCombination {
+    @JsonProperty("reward_multiplier")
     private double rewardMultiplier;
+
     private String when;
     private int count;
     private String group;
+
+    @JsonProperty("covered_areas")
     private List<List<String>> coveredAreas;
 
 

@@ -1,5 +1,7 @@
 package com.cyberspeed.assignment.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +10,8 @@ public class GameConfig {
     private int rows;
     private Map<String, SymbolConfig> symbols;
     private ProbabilitiesConfig probabilities;
+
+    @JsonProperty("win_combinations")
     private Map<String, WinCombination> winCombinations;
 
 

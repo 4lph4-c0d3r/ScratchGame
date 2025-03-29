@@ -1,9 +1,14 @@
 package com.cyberspeed.assignment.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class ProbabilitiesConfig {
+    @JsonProperty("standard_symbols")
     private List<StandardSymbolProbability> standardSymbols;
+
+    @JsonProperty("bonus_symbols")
     private BonusSymbolsProbability bonusSymbols;
 
 

@@ -1,7 +1,11 @@
 package com.cyberspeed.assignment.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class SymbolConfig {
+    @JsonProperty("reward_multiplier")
     private double rewardMultiplier;
+
     private String type;
     private Integer extra;
     private String impact;
