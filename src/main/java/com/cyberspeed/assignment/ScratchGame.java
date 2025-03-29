@@ -1,28 +1,45 @@
 package com.cyberspeed.assignment;
 
+import com.cyberspeed.assignment.models.GameConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 public class ScratchGame {
+
+    private static final Logger logger = LoggerFactory.getLogger(ScratchGame.class);
+
     public static void main(String[] args) {
+        // Input format :
+        // java -jar <your-jar-file> --config config.json --betting-amount 100
 
-        // -----------------------------TODO -----------------------------------------
+        String configFilePath = args[1];
+        int betAmount;
 
-        // Parse command-line arguments -----
-        //  Check for --config <config.json> and --betting-amount <betting_amount>
-        //  Handle missing or invalid arguments
+        try {
+            betAmount = Integer.parseInt(args[3]);
+        } catch (NumberFormatException e) {
+            // Prevent any random input
+            System.err.println("Invalid betting amount. Must be a number.");
+            return;
+        }
 
-        // Load the game configuration from the specified JSON file -----
-        //  Get the config file path from the command-line arguments.
-        //  Use ObjectMapper to read the file into a GameConfig object.
-        //  Handle potential IOException if the file cannot be read.
+        try (InputStream inputStream = new FileInputStream(new File(configFilePath))) {
+            GameConfig config = loadConfig(inputStream);
+            //TODO: add helper class to handle the game logic
 
-        // Initialize the GameEngine with the loaded GameConfig
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
 
-        // Parse the betting amount from the command-line arguments----
-
-        // Execute the game logic
-
-        //Serialize the GameResult to JSON and print it to the console:
-        // Use ObjectMapper to convert the GameResult object to a JSON string.
-        // Print the JSON string to System.out.
-
+    public static GameConfig loadConfig(InputStream inputStream) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(inputStream, GameConfig.class);
     }
 }
