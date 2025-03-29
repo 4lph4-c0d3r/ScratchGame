@@ -2,6 +2,8 @@ package com.cyberspeed.assignment.helper;
 
 import com.cyberspeed.assignment.models.GameConfig;
 import com.cyberspeed.assignment.models.StandardSymbolProbability;
+import com.cyberspeed.assignment.models.SymbolConfig;
+import com.cyberspeed.assignment.models.WinCombination;
 
 import java.util.*;
 
@@ -30,8 +32,7 @@ public class GameHelper {
     public Map<String, Object> playGame(int betAmount) {
         generateMatrix();
 
-        //TODO: calculate reward
-        int reward = 0;
+        int reward = calculateReward(betAmount);
 
         return Map.of(
                 "matrix", matrix,
@@ -116,6 +117,48 @@ public class GameHelper {
     }
 
 
+    /**
+     * Calculates the total reward based on winning combinations and bonus symbols.
+     *
+     * @param betAmount The amount the user bet.
+     * @return The total reward.
+     */
+    private int calculateReward(int betAmount) {
+        int totalReward = 0;
+        checkWinningCombinations();
+
+        // Calculate reward for each symbol and its winning combinations
+        for (Map.Entry<String, List<String>> symbolEntry : appliedWinningCombinations.entrySet()) {
+            String symbol = symbolEntry.getKey();
+            List<String> combinations = symbolEntry.getValue();
+
+            if (config.getSymbols().containsKey(symbol)) {
+                SymbolConfig symbolConfig = config.getSymbols().get(symbol);
+                double symbolReward = betAmount * symbolConfig.getRewardMultiplier();
+
+                // Add reward for each winning combination
+                for (String combination : combinations) {
+                    if (config.getWinCombinations().containsKey(combination)) {
+                        WinCombination winCombination = config.getWinCombinations().get(combination);
+                        totalReward += (int)Math.round(symbolReward * winCombination.getRewardMultiplier());
+                    }
+                }
+            }
+        }
+
+
+        return totalReward;
+    }
+
+
+    /**
+     * Checks for winning combinations in the matrix.
+     */
+    private void checkWinningCombinations() {
+       //TODO: Add logic
+        checkSameSymbolsCombinations(); // Check for "same_symbols" combinations
+        checkLinearSymbolsCombinations(); // Check for "linear_symbols" combinations
+    }
 
 
 }
