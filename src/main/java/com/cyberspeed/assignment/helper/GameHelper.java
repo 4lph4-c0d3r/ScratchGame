@@ -50,6 +50,8 @@ public class GameHelper {
                 matrix[row][col] = getRandomSymbol(row, col); // Get symbol for each cell
             }
         }
+        // Apply bonus symbols to the matrix
+        applyBonusSymbols();
     }
 
 
@@ -90,4 +92,30 @@ public class GameHelper {
 
         return "A";
     }
+
+
+    /**
+     * Applies bonus symbols to the matrix based on their probabilities.
+     */
+    private void applyBonusSymbols() {
+        // If there's no bonus symbol configuration, return
+        if (config.getProbabilities() == null || config.getProbabilities().getBonusSymbols() == null || config.getProbabilities().getBonusSymbols().getSymbols() == null) {
+            return;
+        }
+
+        // Iterate through bonus symbols and their probabilities
+        for (Map.Entry<String, Integer> entry : config.getProbabilities().getBonusSymbols().getSymbols().entrySet()) {
+            if (random.nextInt(100) < entry.getValue()) {
+                int row = random.nextInt(config.getRows());
+                int col = random.nextInt(config.getColumns());
+                // Place the bonus symbol in the matrix
+                matrix[row][col] = entry.getKey();
+                return;
+            }
+        }
+    }
+
+
+
+
 }
