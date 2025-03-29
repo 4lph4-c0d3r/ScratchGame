@@ -1,14 +1,15 @@
 package com.cyberspeed.assignment;
 
+import com.cyberspeed.assignment.helper.GameHelper;
 import com.cyberspeed.assignment.models.GameConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 public class ScratchGame {
 
@@ -25,16 +26,20 @@ public class ScratchGame {
             betAmount = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
             // Prevent any random input
-            System.err.println("Invalid betting amount. Must be a number.");
+           logger.info("Invalid betting amount. Must be a number.");
             return;
         }
 
-        try (InputStream inputStream = new FileInputStream(new File(configFilePath))) {
+        try (InputStream inputStream = new FileInputStream(configFilePath)) {
             GameConfig config = loadConfig(inputStream);
-            //TODO: add helper class to handle the game logic
+            GameHelper gameHelper = new GameHelper(config);
+            Map<String, Object> result = gameHelper.playGame(betAmount);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            logger.info(objectMapper.writeValueAsString(result));
 
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
+            logger.error("Error: ", e);
         }
     }
 
