@@ -11,8 +11,8 @@ public class GameHelper {
     private static final Logger logger = LoggerFactory.getLogger(GameHelper.class);
     private final GameConfig config;
     private final Random random = new Random();
-    private final Map<String, List<String>> appliedWinningCombinations;
-    private String appliedBonusSymbol;
+    public final Map<String, List<String>> appliedWinningCombinations;
+    public String appliedBonusSymbol;
 
     public GameHelper(GameConfig config) {
         this.config = config;
@@ -104,7 +104,6 @@ public class GameHelper {
         // If there's no bonus symbol configuration, return
         if (config.getProbabilities() != null && config.getProbabilities().getBonusSymbols() != null) {
             logger.info("Applying bonus symbols with probabilities: {}", config.getProbabilities().getBonusSymbols().getSymbols());
-            return;
         }
 
         // Iterate through bonus symbols and their probabilities
@@ -161,7 +160,6 @@ public class GameHelper {
         // Check if it's a "lost" game (e.g., no winning symbols or other conditions)
         boolean isLostGame = isLostGame(matrix);
         if (isLostGame) {
-            System.out.println("Game is lost. No bonus will be applied.");
             return 0;  // Return 0 reward if it's a lost game
         }
 
@@ -192,13 +190,18 @@ public class GameHelper {
         return totalReward;
     }
 
+    /**
+     * Determines if the game is lost by checking for winning combinations in the matrix.
+     *
+     * @param matrix The game board as a 2D array.
+     * @return {@code true} if no winning combinations are found, otherwise {@code false}.
+     */
     public boolean isLostGame(String[][] matrix) {
         Map<String, List<String>> tempWinningCombinations = new HashMap<>();
 
         // Check for winning combinations using your existing logic
         checkWinningCombinations(matrix);
 
-        logger.info("Winning COMBINATIONS : " + appliedWinningCombinations);
         // If any winning combinations were found, the game is NOT lost
         boolean isLost = appliedWinningCombinations.isEmpty();
 
