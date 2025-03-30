@@ -158,15 +158,8 @@ public class GameHelper {
      * @return The total reward after applying bonus effects.
      */
     public int applyBonusEffects(int totalReward, String[][] matrix) {
-        // Check if it's a "lost" game (e.g., no winning symbols or other conditions)
-
-        System.out.println("IN CODE - Applied Winning Combinations INSIDE applyBonusEffects: " + appliedWinningCombinations);
-
-
+        // Check if it's a "lost" game
         boolean isLostGame = isLostGame(matrix);
-
-        System.out.println("IN CODE - Applied Winning Combinations AFTER IS LOST: " + appliedWinningCombinations);
-
         if (isLostGame) {
             return 0;  // Return 0 reward if it's a lost game
         }
@@ -205,21 +198,17 @@ public class GameHelper {
      * @return {@code true} if no winning combinations are found, otherwise {@code false}.
      */
     public boolean isLostGame(String[][] matrix) {
-        System.out.println("1 - IN CODE - appliedWinningCombinations IN isLostGame : " + appliedWinningCombinations);
 
         checkWinningCombinations(matrix);
 
         // If any winning combinations were found, the game is NOT lost
         boolean isLost = appliedWinningCombinations.isEmpty();
 
-        System.out.println("2 - IN CODE - appliedWinningCombinations IN isLostGame : " + appliedWinningCombinations);
-
-
         if (isLost) {
-            logger.info("No winning combinations found. Game is lost.");
+            logger.info("No winning combinations found. Game is Lost.");
             appliedWinningCombinations.clear();
         } else {
-            logger.info("Winning combinations found. Game is not lost.");
+            logger.info("Winning combinations found. Game is NOT Lost.");
         }
         return isLost;
     }
@@ -229,9 +218,7 @@ public class GameHelper {
      * Checks for winning combinations in the matrix.
      */
     private void checkWinningCombinations(String[][] matrix) {
-        System.out.println("3 - IN CODE - appliedWinningCombinations IN checkWinningCombinations : " + appliedWinningCombinations);
-
-        appliedWinningCombinations.clear();
+        appliedWinningCombinations.clear(); //clear any previous values to avoid duplicates
 
         checkSameSymbolsCombinations(matrix); // Check for "same_symbols" combinations
         checkLinearSymbolsCombinations(matrix); // Check for "linear_symbols" combinations
