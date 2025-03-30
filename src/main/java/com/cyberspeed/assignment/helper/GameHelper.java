@@ -1,10 +1,6 @@
 package com.cyberspeed.assignment.helper;
 
-import com.cyberspeed.assignment.ScratchGame;
-import com.cyberspeed.assignment.models.GameConfig;
-import com.cyberspeed.assignment.models.StandardSymbolProbability;
-import com.cyberspeed.assignment.models.SymbolConfig;
-import com.cyberspeed.assignment.models.WinCombination;
+import com.cyberspeed.assignment.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +11,11 @@ public class GameHelper {
     private static final Logger logger = LoggerFactory.getLogger(GameHelper.class);
     private final GameConfig config;
     private final Random random = new Random();
-    private final String[][] matrix;
     private final Map<String, List<String>> appliedWinningCombinations;
     private String appliedBonusSymbol;
 
     public GameHelper(GameConfig config) {
         this.config = config;
-        this.matrix = new String[config.getRows()][config.getColumns()];
         this.appliedWinningCombinations = new HashMap<>();
         this.appliedBonusSymbol = "MISS";
     }
@@ -33,30 +27,32 @@ public class GameHelper {
      * @param betAmount The amount the user bet.
      * @return A map containing the game's results (matrix, reward, etc.).
      */
-    public Map<String, Object> playGame(int betAmount) {
-        generateMatrix();
-        int reward = calculateBaseReward(betAmount); // Calculate the base reward
-        reward = applyBonusEffects(reward);
+    public GameResult playGame(int betAmount) {
+        // Generate matrix based on config
+        String[][] matrix = generateMatrix();
 
-        return Map.of(
-                "matrix", matrix,
-                "reward", reward,
-                "appliedWinningCombinations", appliedWinningCombinations,
-                "appliedBonusSymbol", appliedBonusSymbol
-        );
+        // Calculate the base reward
+        int reward = calculateBaseReward(betAmount, matrix);
+
+        // Apply bonus symbol effects
+        reward = applyBonusEffects(reward, matrix);
+
+        return new GameResult(matrix, reward, new HashMap<>(appliedWinningCombinations), appliedBonusSymbol);
     }
 
     /**
      * Generates the symbol matrix based on the configuration.
      */
-    private void generateMatrix() {
+    public String[][] generateMatrix() {
+        String[][] matrix = new String[config.getRows()][config.getColumns()];
         for (int row = 0; row < config.getRows(); row++) {
             for (int col = 0; col < config.getColumns(); col++) {
                 matrix[row][col] = getRandomSymbol(row, col); // Get symbol for each cell
             }
         }
         // Apply bonus symbols to the matrix
-        applyBonusSymbols();
+        applyBonusSymbols(matrix);
+        return matrix;
     }
 
 
@@ -67,7 +63,7 @@ public class GameHelper {
      * @param col The column index.
      * @return The randomly selected symbol.
      */
-    private String getRandomSymbol(int row, int col) {
+    public String getRandomSymbol(int row, int col) {
         // If there's no probability config, return a default symbol
         if (config.getProbabilities() == null || config.getProbabilities().getStandardSymbols() == null || config.getProbabilities().getStandardSymbols().isEmpty()) {
             logger.info("No standard symbol probabilities defined. Using default symbol 'A'.");
@@ -104,9 +100,10 @@ public class GameHelper {
     /**
      * Applies bonus symbols to the matrix based on their probabilities.
      */
-    private void applyBonusSymbols() {
+    public void applyBonusSymbols(String[][] matrix) {
         // If there's no bonus symbol configuration, return
-        if (config.getProbabilities() == null || config.getProbabilities().getBonusSymbols() == null || config.getProbabilities().getBonusSymbols().getSymbols() == null) {
+        if (config.getProbabilities() != null && config.getProbabilities().getBonusSymbols() != null) {
+            logger.info("Applying bonus symbols with probabilities: {}", config.getProbabilities().getBonusSymbols().getSymbols());
             return;
         }
 
@@ -130,12 +127,10 @@ public class GameHelper {
      * @param betAmount The amount the user bet.
      * @return The base reward.
      */
-    private int calculateBaseReward(int betAmount) {
+    private int calculateBaseReward(int betAmount, String[][] matrix) {
         int totalReward = 0;
-        // Check for winning combinations
-        checkWinningCombinations();
+        checkWinningCombinations(matrix);  // Check for winning combinations
 
-        // Calculate reward for each symbol and its winning combinations
         for (Map.Entry<String, List<String>> symbolEntry : appliedWinningCombinations.entrySet()) {
             String symbol = symbolEntry.getKey();
             List<String> combinations = symbolEntry.getValue();
@@ -153,7 +148,6 @@ public class GameHelper {
                 }
             }
         }
-
         return totalReward;
     }
 
@@ -163,10 +157,19 @@ public class GameHelper {
      * @param totalReward The current total reward.
      * @return The total reward after applying bonus effects.
      */
-    private int applyBonusEffects(int totalReward) {
+    public int applyBonusEffects(int totalReward, String[][] matrix) {
+        // Check if it's a "lost" game (e.g., no winning symbols or other conditions)
+        boolean isLostGame = isLostGame(matrix);
+        if (isLostGame) {
+            System.out.println("Game is lost. No bonus will be applied.");
+            return 0;  // Return 0 reward if it's a lost game
+        }
+
         for (int row = 0; row < config.getRows(); row++) {
             for (int col = 0; col < config.getColumns(); col++) {
                 String symbol = matrix[row][col];
+
+                // Check for bonus symbols
                 if (config.getSymbols().containsKey(symbol) && "bonus".equals(config.getSymbols().get(symbol).getType()) && totalReward > 0) {
                     appliedBonusSymbol = symbol;
                     SymbolConfig bonusConfig = config.getSymbols().get(symbol);
@@ -183,26 +186,45 @@ public class GameHelper {
                 }
             }
         }
+
         // Default bonus symbol if none is found
         appliedBonusSymbol = "MISS";
-        logger.info("No bonus symbol found.");
         return totalReward;
+    }
+
+    public boolean isLostGame(String[][] matrix) {
+        Map<String, List<String>> tempWinningCombinations = new HashMap<>();
+
+        // Check for winning combinations using your existing logic
+        checkWinningCombinations(matrix);
+
+        logger.info("Winning COMBINATIONS : " + appliedWinningCombinations);
+        // If any winning combinations were found, the game is NOT lost
+        boolean isLost = appliedWinningCombinations.isEmpty();
+
+        if (isLost) {
+            logger.info("No winning combinations found. Game is lost.");
+        } else {
+            logger.info("Winning combinations found. Game is not lost.");
+        }
+        appliedWinningCombinations.clear();
+        return isLost;
     }
 
 
     /**
      * Checks for winning combinations in the matrix.
      */
-    private void checkWinningCombinations() {
-        checkSameSymbolsCombinations(); // Check for "same_symbols" combinations
-        checkLinearSymbolsCombinations(); // Check for "linear_symbols" combinations
+    private void checkWinningCombinations(String[][] matrix) {
+        checkSameSymbolsCombinations(matrix); // Check for "same_symbols" combinations
+        checkLinearSymbolsCombinations(matrix); // Check for "linear_symbols" combinations
     }
 
 
     /**
      * Checks for "same_symbols" winning combinations.
      */
-    private void checkSameSymbolsCombinations() {
+    public void checkSameSymbolsCombinations(String[][] matrix) {
         Map<String, Integer> symbolCounts = new HashMap<>();
 
         // Count occurrences of each standard symbol
@@ -231,11 +253,11 @@ public class GameHelper {
     /**
      * Checks for "linear_symbols" winning combinations.
      */
-    private void checkLinearSymbolsCombinations() {
+    public void checkLinearSymbolsCombinations(String[][] matrix) {
         for (Map.Entry<String, WinCombination> winEntry : config.getWinCombinations().entrySet()) {
             WinCombination winCombination = winEntry.getValue();
             if ("linear_symbols".equals(winCombination.getWhen())) {
-                checkLinearCombination(winCombination);
+                checkLinearCombination(winCombination, matrix);
             }
         }
     }
@@ -245,7 +267,7 @@ public class GameHelper {
      *
      * @param winCombination The winning combination to check.
      */
-    private void checkLinearCombination(WinCombination winCombination) {
+    public void checkLinearCombination(WinCombination winCombination, String[][] matrix) {
         for (List<String> coveredAreaGroup : winCombination.getCoveredAreas()) {
             String firstSymbol = null;
             boolean match = true;

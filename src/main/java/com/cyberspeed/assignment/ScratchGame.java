@@ -2,6 +2,7 @@ package com.cyberspeed.assignment;
 
 import com.cyberspeed.assignment.helper.GameHelper;
 import com.cyberspeed.assignment.models.GameConfig;
+import com.cyberspeed.assignment.models.GameResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 public class ScratchGame {
 
@@ -33,7 +33,7 @@ public class ScratchGame {
         try (InputStream inputStream = new FileInputStream(configFilePath)) {
             GameConfig config = loadConfig(inputStream);
             GameHelper gameHelper = new GameHelper(config);
-            Map<String, Object> result = gameHelper.playGame(betAmount);
+            GameResult result = gameHelper.playGame(betAmount);
 
             ObjectMapper objectMapper = new ObjectMapper();
             logger.info(objectMapper.writeValueAsString(result));
