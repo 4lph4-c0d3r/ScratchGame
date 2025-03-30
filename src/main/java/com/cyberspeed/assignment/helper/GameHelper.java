@@ -34,6 +34,7 @@ public class GameHelper {
         // Calculate the base reward
         int reward = calculateBaseReward(betAmount, matrix);
 
+
         // Apply bonus symbol effects
         reward = applyBonusEffects(reward, matrix);
 
@@ -126,7 +127,7 @@ public class GameHelper {
      * @param betAmount The amount the user bet.
      * @return The base reward.
      */
-    private int calculateBaseReward(int betAmount, String[][] matrix) {
+    public int calculateBaseReward(int betAmount, String[][] matrix) {
         int totalReward = 0;
         checkWinningCombinations(matrix);  // Check for winning combinations
 
@@ -158,7 +159,14 @@ public class GameHelper {
      */
     public int applyBonusEffects(int totalReward, String[][] matrix) {
         // Check if it's a "lost" game (e.g., no winning symbols or other conditions)
+
+        System.out.println("IN CODE - Applied Winning Combinations INSIDE applyBonusEffects: " + appliedWinningCombinations);
+
+
         boolean isLostGame = isLostGame(matrix);
+
+        System.out.println("IN CODE - Applied Winning Combinations AFTER IS LOST: " + appliedWinningCombinations);
+
         if (isLostGame) {
             return 0;  // Return 0 reward if it's a lost game
         }
@@ -197,20 +205,22 @@ public class GameHelper {
      * @return {@code true} if no winning combinations are found, otherwise {@code false}.
      */
     public boolean isLostGame(String[][] matrix) {
-        Map<String, List<String>> tempWinningCombinations = new HashMap<>();
+        System.out.println("1 - IN CODE - appliedWinningCombinations IN isLostGame : " + appliedWinningCombinations);
 
-        // Check for winning combinations using your existing logic
         checkWinningCombinations(matrix);
 
         // If any winning combinations were found, the game is NOT lost
         boolean isLost = appliedWinningCombinations.isEmpty();
 
+        System.out.println("2 - IN CODE - appliedWinningCombinations IN isLostGame : " + appliedWinningCombinations);
+
+
         if (isLost) {
             logger.info("No winning combinations found. Game is lost.");
+            appliedWinningCombinations.clear();
         } else {
             logger.info("Winning combinations found. Game is not lost.");
         }
-        appliedWinningCombinations.clear();
         return isLost;
     }
 
@@ -219,6 +229,10 @@ public class GameHelper {
      * Checks for winning combinations in the matrix.
      */
     private void checkWinningCombinations(String[][] matrix) {
+        System.out.println("3 - IN CODE - appliedWinningCombinations IN checkWinningCombinations : " + appliedWinningCombinations);
+
+        appliedWinningCombinations.clear();
+
         checkSameSymbolsCombinations(matrix); // Check for "same_symbols" combinations
         checkLinearSymbolsCombinations(matrix); // Check for "linear_symbols" combinations
     }
