@@ -321,8 +321,14 @@ Formula: 100(betting amount) x 3 | reward(symbol B) x1(at least 3 same symbols w
 
 Note: Please make sure there are no errors while building (all test cases should be passed if you provided any) and your solution is testable through CLI like below:
 
-```bash
+```
  java -jar <your-jar-file> --config config.json --betting-amount 100
+ 
+ example: 
+ 
+ mvn clean install 
+ 
+ java -jar target/assignment-1.0-SNAPSHOT.jar --config config.json --betting-amount 100
 ```
 
 | parameter      | description                                        |

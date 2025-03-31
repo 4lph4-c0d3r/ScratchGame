@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -16,9 +16,6 @@ public class ScratchGame {
     private static final Logger logger = LoggerFactory.getLogger(ScratchGame.class);
 
     public static void main(String[] args) {
-        // Input format :
-        // java -jar <your-jar-file> --config config.json --betting-amount 100
-
         String configFilePath = args[1];
         int betAmount;
 
@@ -30,7 +27,10 @@ public class ScratchGame {
             return;
         }
 
-        try (InputStream inputStream = new FileInputStream(configFilePath)) {
+        try (InputStream inputStream = ScratchGame.class.getClassLoader().getResourceAsStream(configFilePath)) {
+            if (inputStream == null) {
+                throw new FileNotFoundException("Config file not found in resources: " + configFilePath);
+            }
             GameConfig config = loadConfig(inputStream);
             GameHelper gameHelper = new GameHelper(config);
             GameResult result = gameHelper.playGame(betAmount);
