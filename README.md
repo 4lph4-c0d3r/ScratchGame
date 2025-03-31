@@ -1,4 +1,4 @@
-# Home Assignment: Scratch Game #
+# Scratch Game #
 
 
 ## Requirements ##
